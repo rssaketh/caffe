@@ -35,7 +35,7 @@ layer {
 }
 layer {
   name: "conv1"
-  type: "Convolution"
+  type: "CustomConvolution"
   bottom: "data"
   top: "conv1"
   param {

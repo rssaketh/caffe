@@ -14,12 +14,12 @@ __global__ void replace_elements(const int nhwc, Dtype* in, int middle, int valu
 template <typename Dtype>
 __global__ void normalize_kernel(const int nhwc, Dtype* in, int num_threads) { 
   if (threadIdx.x == 0) { 
-    int sum=0;
+    Dtype sum=0;
     for (int i=0;i<num_threads;++i)
       sum+= in[blockIdx.x*blockDim.x + i];
 
     for (int j=0;j < num_threads;++j)
-      in[j] = in[j]/sum;
+      in[blockIdx.x*blockDim.x + j] = (1/sum)*in[blockIdx.x*blockDim.x + j];
   
   }
 }
