@@ -18,16 +18,21 @@ __global__ void replace_elements(const int num, Dtype* in, const int start, cons
 }
 
 template <typename Dtype>
-__global__ void normalize_kernel(const int nhwc, Dtype* in, int num_threads) { 
-  if (threadIdx.x == 0) { 
+__global__ void normalize_kernel(Dtype* in) { 
+  //if (threadIdx.x == 0) { 
     Dtype sum=0;
-    for (int i=0;i<num_threads;++i)
+   /* for (int i=0;i<num_threads;++i)
       sum+= in[blockIdx.x*blockDim.x + i];
 
     for (int j=0;j < num_threads;++j)
-      in[blockIdx.x*blockDim.x + j] = (1/sum)*in[blockIdx.x*blockDim.x + j];
+      in[blockIdx.x*blockDim.x + j] = (1/sum)*in[blockIdx.x*blockDim.x + j];*/
+   vector<Dtype> ones_m(count,Dtype(1));    //All ones for sum of elements of matrix
+   CUDA_KERNEL_LOOP(index,gridDim.x) { 
+   	caffe_gpu_dot(blockDim.x, &ones_m[0],in + index*blockDim.x, &sum);
+	caffe_scale(blockDim.x, Dtype(1.0/sum),in + index*blockDim.x);
+   }
   
-  }
+  //}
 }
   
 
@@ -43,7 +48,7 @@ void CustomConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bott
       h = this->blobs_[0]->shape(2),w = this->blobs_[0]->shape(3);
   
   replace_elements<Dtype><<<n*k, w*h>>>(n*k,this->blobs_[0]->mutable_gpu_data(),(w*h)/2,w*h,0);
-  normalize_kernel<Dtype><<<n*k, w*h>>>(n*k*w*h,this->blobs_[0]->mutable_gpu_data(),w*h);
+  normalize_kernel<Dtype><<<n*k, w*h>>>(this->blobs_[0]->mutable_gpu_data());
   replace_elements<Dtype><<<n*k, w*h>>>(n*k,this->blobs_[0]->mutable_gpu_data(),(w*h)/2,w*h,-1);
 
 
