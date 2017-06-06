@@ -5,10 +5,16 @@
 namespace caffe {
 
 template <typename Dtype>
-__global__ void replace_elements(const int nhwc, Dtype* in, int middle, int value) {
-  int j =  blockIdx.x*blockDim.x + middle;
+__global__ void replace_elements(const int num, Dtype* in, const int start, const int offset, const int value) {
+  /*int j =  blockIdx.x*blockDim.x + middle;
   if (j < nhwc)
     in[j] = value;
+  */
+  CUDA_KERNEL_LOOP(index,num) { 
+	in[start + offset*index] = value;
+  }
+
+
 }
 
 template <typename Dtype>
@@ -36,9 +42,9 @@ void CustomConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bott
   int n = this->blobs_[0]->shape(0),k=this->blobs_[0]->shape(1),
       h = this->blobs_[0]->shape(2),w = this->blobs_[0]->shape(3);
   
-  replace_elements<Dtype><<<n*k, w*h>>>(n*k*w*h,this->blobs_[0]->mutable_gpu_data(),(w*h)/2,0);
+  replace_elements<Dtype><<<n*k, w*h>>>(n*k,this->blobs_[0]->mutable_gpu_data(),(w*h)/2,w*h,0);
   normalize_kernel<Dtype><<<n*k, w*h>>>(n*k*w*h,this->blobs_[0]->mutable_gpu_data(),w*h);
-  replace_elements<Dtype><<<n*k, w*h>>>(n*k*w*h,this->blobs_[0]->mutable_gpu_data(),(w*h)/2,-1);
+  replace_elements<Dtype><<<n*k, w*h>>>(n*k,this->blobs_[0]->mutable_gpu_data(),(w*h)/2,w*h,-1);
 
 
 
