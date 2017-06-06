@@ -29,7 +29,7 @@ __global__ void normalize_kernel(Dtype* in) {
    vector<Dtype> ones_m(count,Dtype(1));    //All ones for sum of elements of matrix
    CUDA_KERNEL_LOOP(index,gridDim.x) { 
    	caffe_gpu_dot(blockDim.x, &ones_m[0],in + index*blockDim.x, &sum);
-	caffe_scale(blockDim.x, Dtype(1.0/sum),in + index*blockDim.x);
+	caffe_scal(blockDim.x, Dtype(1.0/sum),in + index*blockDim.x);
    }
   
   //}
